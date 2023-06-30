@@ -1,5 +1,4 @@
-import { Component } from 'react';
-import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react';
 import ContactList from 'components/ContactList';
 import Filter from 'components/Filter';
 import ContactForm from 'components/ContactForm';
@@ -9,68 +8,44 @@ const { Container, Title, Subtitle } = css;
 
 const LOCALE_STORAGE_KEY = 'contactsList';
 
-class App extends Component {
-  static defaultProps = {
-    initialValue: '',
-  };
+const App = () => {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
 
-  static propTypes = { initialValue: PropTypes.string.isRequired };
-
-  state = {
-    contacts: [],
-    filter: this.props.initialValue,
-  };
-
-  componentDidMount() {
-    this.getContactsFromLocaleStorage();
-  }
-
-  componentDidUpdate(_, prevState) {
-    this.saveContactsToLocaleStorage(prevState);
-  }
-
-  getContactsFromLocaleStorage = () => {
+  useEffect(() => {
     const savedContacts = localStorage.getItem(LOCALE_STORAGE_KEY);
-
     if (savedContacts) {
       const parsedContacts = JSON.parse(savedContacts);
-
-      this.setState({ contacts: parsedContacts });
+      setContacts(parsedContacts);
     }
-  };
+  }, []);
 
-  saveContactsToLocaleStorage = (prevState) => {
-    const { contacts } = this.state;
-    if (prevState.contacts !== contacts) {
-      const savedContacts = JSON.stringify(contacts);
-      localStorage.setItem(LOCALE_STORAGE_KEY, savedContacts);
+  useEffect(() => {
+    const savedContacts = JSON.stringify(contacts);
+    localStorage.setItem(LOCALE_STORAGE_KEY, savedContacts);
 
-      if (!contacts.length) {
-        localStorage.removeItem(LOCALE_STORAGE_KEY);
-      }
+    if (!contacts.length) {
+      localStorage.removeItem(LOCALE_STORAGE_KEY);
     }
-  };
+  }, [contacts]);
 
-  addContact = (contact) => {
-    const contacts = this.state.contacts;
+  const addContact = (contact) => {
     const contactName = contact.name;
     const contactIndex = contacts.findIndex(({ name }) => name === contactName);
     if (!!~contactIndex) {
       alert(`${contactName} is already in contacts.`);
       return;
     }
-    this.setState(({ contacts }) => ({
-      contacts: [...contacts, contact],
-    }));
+    setContacts((prevState) => [...prevState, contact]);
   };
 
-  onChangeInput = (e) => {
-    const { name, value } = e.target;
-    this.setState({ [name]: value });
+  const onDeleteContact = (id) => {
+    setContacts((prevState) =>
+      prevState.filter(({ id: contactId }) => contactId !== id)
+    );
   };
 
-  filterContacts = (value) => {
-    const { filter, contacts } = this.state;
+  const filterContacts = (value) => {
     if (!filter) {
       return contacts;
     }
@@ -80,34 +55,22 @@ class App extends Component {
     );
   };
 
-  onDeleteContact = (id) => {
-    this.setState(({ contacts }) => {
-      const updateContacts = contacts.filter(
-        ({ id: contactId }) => contactId !== id
-      );
-      return { contacts: updateContacts };
-    });
-  };
+  const filteredContacts = filterContacts(filter);
 
-  render() {
-    const { filter, contacts } = this.state;
-    const filteredContacts = this.filterContacts(filter);
-
-    return (
-      <Container>
-        <Title>Phonebook</Title>
-        <ContactForm addContact={this.addContact} />
-        <Subtitle>Contacts</Subtitle>
-        <Filter value={filter} onChangeInput={this.onChangeInput} />
-        {!!contacts.length && (
-          <ContactList
-            contacts={filteredContacts}
-            onDeleteContact={this.onDeleteContact}
-          />
-        )}
-      </Container>
-    );
-  }
-}
+  return (
+    <Container>
+      <Title>Phonebook</Title>
+      <ContactForm addContact={addContact} />
+      <Subtitle>Contacts</Subtitle>
+      <Filter value={filter} onChangeInput={(e) => setFilter(e.target.value)} />
+      {!!contacts.length && (
+        <ContactList
+          contacts={filteredContacts}
+          onDeleteContact={onDeleteContact}
+        />
+      )}
+    </Container>
+  );
+};
 
 export default App;
