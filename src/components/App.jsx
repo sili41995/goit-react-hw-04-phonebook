@@ -1,28 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { nanoid } from 'nanoid';
 import ContactForm from 'components/ContactForm';
 import Filter from 'components/Filter';
 import ContactList from 'components/ContactList';
 import Section from 'components/Section';
-import loadContacts from 'utils/loadContacts';
 import LS_KEY from 'constants/local-storage-key';
-import saveContacts from 'utils/saveContacts';
 import filteredContacts from 'utils/filteredContacts';
+import useLocalStorage from 'hooks/useLocalStorage';
 
 export const App = () => {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useLocalStorage(LS_KEY, []);
   const [filter, setFilter] = useState('');
-
-  useEffect(() => {
-    const contacts = loadContacts(LS_KEY);
-    if (!contacts?.length) return;
-    setContacts(contacts);
-  }, []);
-
-  useEffect(() => {
-    saveContacts(LS_KEY, contacts);
-  }, [contacts]);
 
   const visibleContacts = filteredContacts(filter, contacts);
 
