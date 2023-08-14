@@ -1,5 +1,4 @@
 import styled from '@emotion/styled';
-import { Field } from 'formik';
 
 export const Container = styled.div`
   padding: ${({ theme }) => theme.spacing * 4}px;
@@ -21,6 +20,6 @@ export const Error = styled.p`
   color: red;
 `;
 
-export const Input = styled(Field)`
+export const Input = styled.input`
   display: block;
 `;
